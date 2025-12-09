@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Westpoort/Havenstad Underground Demo</title>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <style>
+        body,
+        html {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #cesiumContainer {
+            width: 100%;
+            height: 100%;
+        }
+
+        #toolbar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 300px;
+            padding: 15px;
+            background: rgba(30, 30, 30, 0.85);
+            /* Darker, glass-like */
+            backdrop-filter: blur(10px);
+            color: #f0f0f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        p {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        /* Toggle Switch Style */
+        .switch-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 15px 0;
+        }
+
+        .status {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="cesiumContainer"></div>
+
+    <div id="toolbar">
+        <h2>Amsterdam Havenstad</h2>
+        <p>Data Space / Underground Visualization</p>
+
+        <div class="control-group">
+            <h3 style="font-size: 1rem; margin-bottom: 10px;">Layers</h3>
+            <label class="switch-label">
+                <input type="radio" name="layerSelect" id="toggleLayer1" value="layer1" checked>
+                <span>Layer 1: Surface (Buildings + Map)</span>
+            </label>
+            <label class="switch-label">
+                <input type="radio" name="layerSelect" id="toggleLayer2" value="layer2">
+                <span>Layer 2: Shallow (-3m to -7m)</span>
+            </label>
+            <label class="switch-label">
+                <input type="radio" name="layerSelect" id="toggleLayer3" value="layer3">
+                <span>Layer 3: Deep (-8m and below)</span>
+            </label>
+        </div>
+
+        <div class="status" id="statusText">Loading...</div>
+    </div>
+
+    <script>
+        // Cesium Setup
+
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmNmNiNGMzYi00Y2U4LTQ4ZDYtYTFjOC05NjY0MDZlMzRlNTMiLCJpZCI6MzY4MDAwLCJpYXQiOjE3NjUyNzc1OTB9.7YpgEtFgQ5_Faib4dt4cr8eHM95CX-tmk_KQ1sT71Aw';
+
+        // 1. Initialize Viewer
+        // We use OpenStreetMap (2D) as it is free and does not require an Ion Token / 401 checks.
+        // Added standard controls back: Home, Navigation Help, Scene Mode
+        // -- 1. Initialize Viewer --
+
+        // Setup Imagery Provider with Debugging
+        // Using OpenStreetMap - try without subdomains first (simpler, often more reliable)
+        const imageryProvider = new Cesium.UrlTemplateImageryProvider({
+            url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            credit: 'Map data © OpenStreetMap contributors',
+            maximumLevel: 19
+        });
+
+        imageryProvider.errorEvent.addEventListener((error) => {
+            console.error('Imagery Provider Error:', error);
+            document.getElementById('statusText').innerText = "Imagery Error: " + error.message;
+        });
+
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+            // Don't set imageryProvider here - we'll add it explicitly after
+            // terrain: Cesium.Terrain.fromWorldTerrain(), // DISABLED: Requires Token.
+            baseLayerPicker: false,
+            skyBox: false,
+            skyAtmosphere: false,
+            contextOptions: {
+                webgl: {
+                    alpha: true
+                }
+            },
+            animation: false,      // Animation timeline often confusing for simple map
+            timeline: false,
+            geocoder: true,        // Allow searching locations
+            homeButton: true,      // Allow resetting view
+            sceneModePicker: true, // 2D/3D toggle
+            navigationHelpButton: true, // Shows how to use mouse
+            infoBox: true,
+            selectionIndicator: true
+        });
+        
+        // Remove default imagery layer
+        viewer.scene.imageryLayers.removeAll();
+        
+        // Create layer system with multiple imagery layers
+        // Layer 1: Top layer (full opacity) - for buildings
+        const layer1Imagery = viewer.scene.imageryLayers.addImageryProvider(imageryProvider);
+        layer1Imagery.alpha = 1.0;
+        
+        // Layer 2: Middle layer (0.3 opacity) - for shallow pipes
+        const layer2Imagery = viewer.scene.imageryLayers.addImageryProvider(
+            new Cesium.UrlTemplateImageryProvider({
+                url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                credit: 'Map data © OpenStreetMap contributors',
+                maximumLevel: 19
+            })
+        );
+        layer2Imagery.alpha = 0.3;
+        
+        // Layer 3: Deep layer (0.3 opacity) - for deep pipes
+        const layer3Imagery = viewer.scene.imageryLayers.addImageryProvider(
+            new Cesium.UrlTemplateImageryProvider({
+                url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                credit: 'Map data © OpenStreetMap contributors',
+                maximumLevel: 19
+            })
+        );
+        layer3Imagery.alpha = 0.3;
+        
+        // Store references for layer toggles
+        window.layer1ImageryRef = layer1Imagery;
+        window.layer2ImageryRef = layer2Imagery;
+        window.layer3ImageryRef = layer3Imagery;
+
+        // Default Background
+        viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#222222');
+        
+        // Ensure imagery layer is visible and working
+        viewer.scene.globe.show = true;
+        viewer.scene.globe.enableLighting = false;
+        
+        // Verify imagery layer is set
+        console.log('Imagery layers:', viewer.scene.imageryLayers.length);
+
+        // Remove default double-click lock on entity
+        viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
+        // -- 1. Setup Camera for Amsterdam Havenstad --
+        const startCoordinates = {
+            longitude: 4.878,
+            latitude: 52.400,
+            height: 1200,
+            heading: 0,
+            pitch: -Cesium.Math.toRadians(60) // Steeper angle to see map better
+        };
+
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(
+                startCoordinates.longitude,
+                startCoordinates.latitude,
+                startCoordinates.height
+            ),
+            orientation: {
+                heading: Cesium.Math.toRadians(startCoordinates.heading),
+                pitch: startCoordinates.pitch,
+                roll: 0.0
+            },
+            duration: 3
+        });
+
+        // -- 2. Layers Logic --
+        let triplyDataSource = null;
+        const layerEntities = {
+            layer1: [], // Buildings (surface)
+            layer2: [], // Shallow pipes (-3 to -7m)
+            layer3: []  // Deep pipes (-8m and below)
+        };
+
+        // Load Triply Data (Pipes + Buildings)
+        async function setupData() {
+            try {
+                const dataSource = await Cesium.GeoJsonDataSource.load('stub_data.geojson', {
+                    clampToGround: false // CRITICAL: Must be false to respect depth
+                });
+                triplyDataSource = dataSource;
+                viewer.dataSources.add(dataSource);
+
+                const entities = dataSource.entities.values;
+                for (let i = 0; i < entities.length; i++) {
+                    const entity = entities[i];
+                    const type = entity.properties.type ? entity.properties.type.getValue() : 'Unknown';
+                    const depth = entity.properties.depth ? entity.properties.depth.getValue() : 0;
+
+                    // --- PIPES (Lines) ---
+                    if (entity.polyline) {
+                        // Make lines thicker and colored by type if possible
+                        entity.polyline.width = 6;
+
+                        let color = Cesium.Color.ORANGE;
+
+                        if (type === 'Sewer') color = Cesium.Color.DARKGREEN;
+                        else if (type === 'Gas') color = Cesium.Color.YELLOW;
+                        else if (type === 'Water') color = Cesium.Color.CYAN;
+                        else if (type === 'Power') color = Cesium.Color.RED;
+
+                        entity.polyline.material = new Cesium.PolylineGlowMaterialProperty({
+                            glowPower: 0.2,
+                            color: color
+                        });
+
+                        // Assign to layer based on depth
+                        if (depth >= -7 && depth <= -3) {
+                            layerEntities.layer2.push(entity);
+                        } else if (depth < -7) {
+                            layerEntities.layer3.push(entity);
+                        } else {
+                            // Surface pipes go to layer 1
+                            layerEntities.layer1.push(entity);
+                        }
+                    }
+
+                    // --- BUILDINGS (Polygons) ---
+                    if (entity.polygon) {
+                        const heightVal = entity.properties.height ? entity.properties.height.getValue() : 0;
+
+                        if (type === 'Building') {
+                            entity.polygon.extrudedHeight = heightVal;
+                            entity.polygon.material = Cesium.Color.fromCssColorString('#4682B4').withAlpha(0.9); // SteelBlue
+                            entity.polygon.outline = true;
+                            entity.polygon.outlineColor = Cesium.Color.WHITE;
+                            
+                            // Buildings always go to layer 1
+                            layerEntities.layer1.push(entity);
+                        }
+                    }
+                }
+                document.getElementById('statusText').innerText = "Ready. Located at Havenstad.";
+            } catch (e) {
+                console.error("Data failed:", e);
+                document.getElementById('statusText').innerText = "Error loading data.";
+            }
+        }
+        setupData();
+
+        // -- 3. Layer Radio Button Handlers --
+
+        // Show only selected layer, hide all others
+        function showLayer(layerName) {
+            const allLayers = ['layer1', 'layer2', 'layer3'];
+            
+            allLayers.forEach(layer => {
+                const isVisible = layer === layerName;
+                const entities = layerEntities[layer] || [];
+                entities.forEach(entity => {
+                    entity.show = isVisible;
+                });
+                
+                // Toggle corresponding imagery layer
+                let imageryLayer = null;
+                if (layer === 'layer1') {
+                    imageryLayer = window.layer1ImageryRef;
+                } else if (layer === 'layer2') {
+                    imageryLayer = window.layer2ImageryRef;
+                } else if (layer === 'layer3') {
+                    imageryLayer = window.layer3ImageryRef;
+                }
+                
+                if (imageryLayer) {
+                    imageryLayer.show = isVisible;
+                }
+            });
+        }
+
+        // Single handler for all radio buttons
+        const layerRadios = document.querySelectorAll('input[name="layerSelect"]');
+        layerRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    showLayer(e.target.value);
+                }
+            });
+        });
+        
+        // Initialize with layer 1 visible
+        showLayer('layer1');
+        
+        // Enable underground camera movement for viewing layers
+        viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+
+        // Initial State defaults
+        viewer.scene.globe.show = true; // Ensure globe is visible
+
+    </script>
+</body>
+
+</html>

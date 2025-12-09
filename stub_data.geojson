@@ -1,0 +1,113 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hoofd riool West",
+        "type": "Sewer",
+        "depth": -10,
+        "status": "active"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87000, 52.40000, -10],
+          [4.87500, 52.40200, -12],
+          [4.88000, 52.40100, -10],
+          [4.88500, 52.40300, -11]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Gasleiding Noord-Zuid",
+        "type": "Gas",
+        "depth": -5
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87800, 52.39500, -5],
+          [4.87800, 52.40500, -5]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Aftakking Haven",
+        "type": "Water",
+        "depth": -3
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87500, 52.40200, -3],
+          [4.87200, 52.40400, -3]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Warehouse A",
+        "type": "Building",
+        "height": 25
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [4.87700, 52.40050, 0],
+            [4.87900, 52.40050, 0],
+            [4.87900, 52.40150, 0],
+            [4.87700, 52.40150, 0],
+            [4.87700, 52.40050, 0]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Office Complex B",
+        "type": "Building",
+        "height": 45
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [4.87200, 52.40250, 0],
+            [4.87400, 52.40250, 0],
+            [4.87400, 52.40350, 0],
+            [4.87200, 52.40350, 0],
+            [4.87200, 52.40250, 0]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Logistics Hub C",
+        "type": "Building",
+        "height": 15
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+             [4.88100, 52.40100, 0],
+             [4.88300, 52.40100, 0],
+             [4.88300, 52.40200, 0],
+             [4.88100, 52.40200, 0],
+             [4.88100, 52.40100, 0]
+          ]
+        ]
+      }
+    }
+  ]
+}
