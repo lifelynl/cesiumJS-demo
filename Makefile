@@ -1,0 +1,3 @@
+serve:
+	npx http-server
+
