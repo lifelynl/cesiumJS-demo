@@ -179,7 +179,7 @@
 
         const viewer = new Cesium.Viewer('cesiumContainer', {
             // Don't set imageryProvider here - we'll add it explicitly after
-            // terrain: Cesium.Terrain.fromWorldTerrain(), // DISABLED: Requires Token.
+            terrain: Cesium.Terrain.fromWorldTerrain(),
             baseLayerPicker: false,
             skyBox: false,
             skyAtmosphere: false,
@@ -236,15 +236,15 @@
         viewer.scene.globe.show = true;
         viewer.scene.globe.enableLighting = false;
         
-        // Enable shadows with custom color tint
-        viewer.shadows = true;
-        viewer.shadowMap.darkness = 0.3;
-        viewer.shadowMap.softShadows = true;
-        viewer.scene.globe.shadows = Cesium.ShadowMode.RECEIVE_ONLY;
+        // Disable shadows and real-time lighting
+        viewer.shadows = false;
+        viewer.scene.globe.shadows = Cesium.ShadowMode.DISABLED;
         
-        // Custom shadow color - tint shadows with a purple/blue color
-        // This affects how shadows appear by adjusting ambient lighting
-        viewer.scene.ambientLightColor = Cesium.Color.fromCssColorString('#B794F6').withAlpha(0.3);
+        // Set bright uniform lighting for 3D tiles
+        viewer.scene.light = new Cesium.DirectionalLight({
+            direction: new Cesium.Cartesian3(0, 0, -1),
+            intensity: 2.0
+        });
         
         // Verify imagery layer is set
         console.log('Imagery layers:', viewer.scene.imageryLayers.length);
@@ -287,7 +287,7 @@
         async function setupData() {
             try {
                 const dataSource = await Cesium.GeoJsonDataSource.load('havenstad_subset.geojson', {
-                    clampToGround: false // CRITICAL: Must be false to respect depth
+                    clampToGround: true // Clamp to terrain surface
                 });
                 triplyDataSource = dataSource;
                 viewer.dataSources.add(dataSource);
@@ -348,13 +348,17 @@
             try {
                 const osmBuildings = await Cesium.createOsmBuildingsAsync();
                 osmBuildings.style = new Cesium.Cesium3DTileStyle({
-                    color: "color('rgb(251, 251, 251)')" // Light gray matching Mapbox light theme
+                    color: "color('#FFFFFF')"
                 });
-                // Adjust height offset to fix floating buildings
-                // Lower buildings by translating down
-                osmBuildings.modelMatrix = Cesium.Matrix4.fromTranslation(
-                    new Cesium.Cartesian3(0, 0, -30)
-                );
+                // Make buildings appear flat white by using custom shader
+                osmBuildings.customShader = new Cesium.CustomShader({
+                    fragmentShaderText: `
+                        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+                            material.diffuse = vec3(1.0, 1.0, 1.0);
+                            material.alpha = 1.0;
+                        }
+                    `
+                });
                 viewer.scene.primitives.add(osmBuildings);
             } catch (error) {
                 console.error('Error loading OSM Buildings:', error);
