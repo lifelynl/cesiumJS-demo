@@ -162,13 +162,13 @@
         Cesium.Ion.defaultAccessToken = '';
 
         // 1. Initialize Viewer
-        // Using Mapbox dark-v11 style for modern dark theme
+        // Using Mapbox light-v11 style for modern dark theme
         // Added standard controls back: Home, Navigation Help, Scene Mode
         // -- 1. Initialize Viewer --
 
-        // Setup Imagery Provider with Mapbox dark-v11 style
+        // Setup Imagery Provider with Mapbox light-v11 style
         const imageryProvider = new Cesium.MapboxStyleImageryProvider({
-            styleId: 'dark-v11',
+            styleId: 'light-v11',
             accessToken: 'pk.eyJ1IjoiamVzc2VsaWZlbHkiLCJhIjoiY21naTN1MHUwMDNnNjJrc2hiZDd5ZmFqZyJ9.7k3Lw9dceo-jFLDaFJAEpA'
         });
 
@@ -209,7 +209,7 @@
         // Layer 2: Middle layer (0.3 opacity) - for shallow pipes
         const layer2Imagery = viewer.scene.imageryLayers.addImageryProvider(
             new Cesium.MapboxStyleImageryProvider({
-                styleId: 'dark-v11',
+                styleId: 'light-v11',
                 accessToken: 'pk.eyJ1IjoiamVzc2VsaWZlbHkiLCJhIjoiY21naTN1MHUwMDNnNjJrc2hiZDd5ZmFqZyJ9.7k3Lw9dceo-jFLDaFJAEpA'
             })
         );
@@ -218,7 +218,7 @@
         // Layer 3: Deep layer (0.3 opacity) - for deep pipes
         const layer3Imagery = viewer.scene.imageryLayers.addImageryProvider(
             new Cesium.MapboxStyleImageryProvider({
-                styleId: 'dark-v11',
+                styleId: 'light-v11',
                 accessToken: 'pk.eyJ1IjoiamVzc2VsaWZlbHkiLCJhIjoiY21naTN1MHUwMDNnNjJrc2hiZDd5ZmFqZyJ9.7k3Lw9dceo-jFLDaFJAEpA'
             })
         );
