@@ -42,7 +42,7 @@
             margin: 0 0 15px 0;
             font-size: 1.2rem;
             font-weight: 600;
-            color: #fff;
+            color: #B794F6;
         }
 
         p {
@@ -290,15 +290,13 @@
 
                     // --- PIPES (Lines) ---
                     if (entity.polyline) {
-                        entity.polyline.width = 8;
+                        entity.polyline.width = 1;
 
                         // Make all pipes purple
-                        const color = Cesium.Color.PURPLE;
+                        const color = Cesium.Color.fromCssColorString('#B794F6');
 
-                        entity.polyline.material = new Cesium.PolylineGlowMaterialProperty({
-                            glowPower: 0.3,
-                            color: color
-                        });
+
+                        entity.polyline.material = color;
 
                         // Assign pipe to correct layer based on depth
                         // Shallow: above -1m up to 0m
@@ -318,9 +316,9 @@
 
                         if (type === 'Building') {
                             entity.polygon.extrudedHeight = heightVal;
-                            entity.polygon.material = Cesium.Color.fromCssColorString('#4682B4').withAlpha(0.9); // SteelBlue
+                            entity.polygon.material = Cesium.Color.ORANGE; // SteelBlue
                             entity.polygon.outline = true;
-                            entity.polygon.outlineColor = Cesium.Color.WHITE;
+                            entity.polygon.outlineColor = Cesium.Color.ORANGE;
                             
                             // Buildings always go to layer 1
                             layerEntities.layer1.push(entity);
