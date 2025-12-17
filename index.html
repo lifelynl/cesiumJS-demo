@@ -159,7 +159,7 @@
     <script>
         // Cesium Setup
 
-        Cesium.Ion.defaultAccessToken = '';
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmNmNiNGMzYi00Y2U4LTQ4ZDYtYTFjOC05NjY0MDZlMzRlNTMiLCJpZCI6MzY4MDAwLCJpYXQiOjE3NjUyNzc1OTB9.7YpgEtFgQ5_Faib4dt4cr8eHM95CX-tmk_KQ1sT71Aw';
 
         // 1. Initialize Viewer
         // Using Mapbox light-v11 style for modern dark theme
@@ -235,6 +235,16 @@
         // Ensure imagery layer is visible and working
         viewer.scene.globe.show = true;
         viewer.scene.globe.enableLighting = false;
+        
+        // Enable shadows with custom color tint
+        viewer.shadows = true;
+        viewer.shadowMap.darkness = 0.3;
+        viewer.shadowMap.softShadows = true;
+        viewer.scene.globe.shadows = Cesium.ShadowMode.RECEIVE_ONLY;
+        
+        // Custom shadow color - tint shadows with a purple/blue color
+        // This affects how shadows appear by adjusting ambient lighting
+        viewer.scene.ambientLightColor = Cesium.Color.fromCssColorString('#B794F6').withAlpha(0.3);
         
         // Verify imagery layer is set
         console.log('Imagery layers:', viewer.scene.imageryLayers.length);
@@ -332,6 +342,24 @@
             }
         }
         setupData();
+
+        // Add 3D buildings from Cesium Ion (OSM Buildings)
+        (async function() {
+            try {
+                const osmBuildings = await Cesium.createOsmBuildingsAsync();
+                osmBuildings.style = new Cesium.Cesium3DTileStyle({
+                    color: "color('rgb(251, 251, 251)')" // Light gray matching Mapbox light theme
+                });
+                // Adjust height offset to fix floating buildings
+                // Lower buildings by translating down
+                osmBuildings.modelMatrix = Cesium.Matrix4.fromTranslation(
+                    new Cesium.Cartesian3(0, 0, -30)
+                );
+                viewer.scene.primitives.add(osmBuildings);
+            } catch (error) {
+                console.error('Error loading OSM Buildings:', error);
+            }
+        })();
 
         // -- 3. Layer Radio Button Handlers --
 
