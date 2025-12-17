@@ -238,16 +238,22 @@
         // Cesium Setup
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmNmNiNGMzYi00Y2U4LTQ4ZDYtYTFjOC05NjY0MDZlMzRlNTMiLCJpZCI6MzY4MDAwLCJpYXQiOjE3NjUyNzc1OTB9.7YpgEtFgQ5_Faib4dt4cr8eHM95CX-tmk_KQ1sT71Aw';
 
-        const imageryProvider = new Cesium.UrlTemplateImageryProvider({
-            url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            credit: 'Map data © OpenStreetMap contributors',
-            maximumLevel: 19
+        // Setup Imagery Provider with Mapbox light-v11 style
+        const imageryProvider = new Cesium.MapboxStyleImageryProvider({
+            styleId: 'light-v11',
+            accessToken: 'pk.eyJ1IjoiamVzc2VsaWZlbHkiLCJhIjoiY21naTN1MHUwMDNnNjJrc2hiZDd5ZmFqZyJ9.7k3Lw9dceo-jFLDaFJAEpA'
         });
 
         const viewer = new Cesium.Viewer('cesiumContainer', {
+            terrain: Cesium.Terrain.fromWorldTerrain(),
             baseLayerPicker: false,
             skyBox: false,
             skyAtmosphere: false,
+            contextOptions: {
+                webgl: {
+                    alpha: true
+                }
+            },
             animation: false,
             timeline: false,
             geocoder: true,
@@ -263,11 +269,43 @@
         viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#222222');
         viewer.scene.globe.show = true;
         viewer.scene.globe.enableLighting = false;
+        
+        // Disable shadows and real-time lighting
+        viewer.shadows = false;
+        viewer.scene.globe.shadows = Cesium.ShadowMode.DISABLED;
+        
+        // Set bright uniform lighting for 3D tiles
+        viewer.scene.light = new Cesium.DirectionalLight({
+            direction: new Cesium.Cartesian3(0, 0, -1),
+            intensity: 2.0
+        });
+        
+        // Add 3D buildings from Cesium Ion (OSM Buildings)
+        (async function() {
+            try {
+                const osmBuildings = await Cesium.createOsmBuildingsAsync();
+                osmBuildings.style = new Cesium.Cesium3DTileStyle({
+                    color: "color('#FFFFFF')"
+                });
+                // Make buildings appear flat white by using custom shader
+                osmBuildings.customShader = new Cesium.CustomShader({
+                    fragmentShaderText: `
+                        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+                            material.diffuse = vec3(1.0, 1.0, 1.0);
+                            material.alpha = 1.0;
+                        }
+                    `
+                });
+                viewer.scene.primitives.add(osmBuildings);
+            } catch (error) {
+                console.error('Error loading OSM Buildings:', error);
+            }
+        })();
 
         const startCoordinates = {
-            longitude: 4.878,
-            latitude: 52.400,
-            height: 1200,
+            longitude: 4.85169,
+            latitude: 52.37004,
+            height: 5000,
             heading: 0,
             pitch: -Cesium.Math.toRadians(60)
         };
@@ -286,10 +324,35 @@
             duration: 3
         });
 
-        // Test data for streets with pipes
+        // Load pipe data from GeoJSON (same as main demo)
+        (async function loadPipeData() {
+            try {
+                const dataSource = await Cesium.GeoJsonDataSource.load('havenstad_subset.geojson', {
+                    clampToGround: true
+                });
+                viewer.dataSources.add(dataSource);
+
+                const entities = dataSource.entities.values;
+                for (let i = 0; i < entities.length; i++) {
+                    const entity = entities[i];
+
+                    // Style pipes
+                    if (entity.polyline) {
+                        entity.polyline.width = 1;
+                        entity.polyline.material = Cesium.Color.fromCssColorString('#B794F6');
+                    }
+                }
+            } catch (e) {
+                console.error("Pipe data failed to load:", e);
+            }
+        })();
+
+        // Test data for streets with pipes (with coordinates for map zoom)
         const streetData = {
             "Havenstraat": {
                 name: "Havenstraat",
+                longitude: 4.8785,
+                latitude: 52.3875,
                 pipes: [
                     { name: "Riool", type: "Sewer", diameter: 400, depth: 100, color: "#8B4513", x: 15 },
                     { name: "Kabel", type: "Telecom", diameter: 200, depth: 400, color: "#FF6B35", x: 35 },
@@ -299,6 +362,8 @@
             },
             "Westhavenweg": {
                 name: "Westhavenweg",
+                longitude: 4.8350,
+                latitude: 52.4050,
                 pipes: [
                     { name: "Riool 18-in", type: "Sewer", diameter: 450, depth: 120, color: "#8B4513", x: 20 },
                     { name: "Water 12-in", type: "Water", diameter: 300, depth: 300, color: "#4A90E2", x: 40 },
@@ -308,6 +373,8 @@
             },
             "Noordzeeweg": {
                 name: "Noordzeeweg",
+                longitude: 4.8280,
+                latitude: 52.4100,
                 pipes: [
                     { name: "Riool 1m", type: "Sewer", diameter: 500, depth: 100, color: "#8B4513", x: 25 },
                     { name: "Kabel 400cm", type: "Telecom", diameter: 200, depth: 400, color: "#FF6B35", x: 50 },
@@ -316,6 +383,8 @@
             },
             "Havenkade": {
                 name: "Havenkade",
+                longitude: 4.8900,
+                latitude: 52.3820,
                 pipes: [
                     { name: "Hoofdriool", type: "Sewer", diameter: 600, depth: 150, color: "#8B4513", x: 30 },
                     { name: "Waterleiding", type: "Water", diameter: 400, depth: 280, color: "#4A90E2", x: 50 },
@@ -323,6 +392,25 @@
                 ]
             }
         };
+        
+        // Function to fly to a street location
+        function flyToStreet(street) {
+            if (street && street.longitude && street.latitude) {
+                viewer.camera.flyTo({
+                    destination: Cesium.Cartesian3.fromDegrees(
+                        street.longitude,
+                        street.latitude,
+                        800 // Lower height for street-level view
+                    ),
+                    orientation: {
+                        heading: Cesium.Math.toRadians(0),
+                        pitch: -Cesium.Math.toRadians(45),
+                        roll: 0.0
+                    },
+                    duration: 1.5
+                });
+            }
+        }
 
         // Type colors mapping
         const typeColors = {
@@ -435,6 +523,7 @@
             const selectedStreet = e.target.value;
             if (selectedStreet && streetData[selectedStreet]) {
                 renderCrossSection(streetData[selectedStreet]);
+                flyToStreet(streetData[selectedStreet]);
             } else {
                 renderCrossSection(null);
             }
@@ -445,6 +534,8 @@
             const firstStreet = Object.keys(streetData)[0];
             streetSelect.value = firstStreet;
             renderCrossSection(streetData[firstStreet]);
+            // Fly to first street after initial camera animation
+            setTimeout(() => flyToStreet(streetData[firstStreet]), 3500);
         }
     </script>
 </body>
