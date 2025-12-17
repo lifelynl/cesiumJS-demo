@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Street Cross-Section Demo</title>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <style>
+        body,
+        html {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        #cesiumContainer {
+            flex: 1;
+            height: 100%;
+        }
+
+        #crossSectionPanel {
+            width: 600px;
+            background: rgba(30, 30, 30, 0.95);
+            color: #f0f0f0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -4px 0 15px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+        }
+
+        #crossSectionPanel h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(50, 50, 50, 0.8);
+            color: #f0f0f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        select:hover {
+            background: rgba(60, 60, 60, 0.8);
+        }
+
+        .street-view {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .cross-section-container {
+            background: rgba(40, 40, 40, 0.8);
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 400px;
+            position: relative;
+        }
+
+        .cross-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #fff;
+            text-align: center;
+        }
+
+        .cross-section-view {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            background: linear-gradient(to bottom, 
+                rgba(139, 69, 19, 0.3) 0%,
+                rgba(101, 67, 33, 0.5) 50%,
+                rgba(60, 40, 20, 0.7) 100%);
+            position: relative;
+            overflow: visible;
+        }
+
+        .ground-surface {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: rgba(139, 69, 19, 0.8);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .pipe-circle {
+            position: absolute;
+            border: 3px solid;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .pipe-label {
+            position: absolute;
+            font-size: 0.75rem;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .depth-scale {
+            position: absolute;
+            right: 10px;
+            top: 30px;
+            bottom: 10px;
+            width: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .depth-marker {
+            width: 100%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #4CAF50;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .pipe-legend {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.85rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <div id="cesiumContainer"></div>
+        <div id="crossSectionPanel">
+            <a href="index.html" class="back-link">← Back to Main Demo</a>
+            <h2>Street Cross-Section</h2>
+
+            <div class="control-group">
+                <label for="streetSelect">Select Street:</label>
+                <select id="streetSelect">
+                    <option value="">-- Select a street --</option>
+                </select>
+            </div>
+
+            <div class="street-view" id="streetView">
+                Street View
+            </div>
+
+            <div class="cross-section-container">
+                <div class="cross-section-title">Cross-Section Profile</div>
+                <div class="cross-section-view" id="crossSectionView">
+                    <div class="ground-surface"></div>
+                    <div class="depth-scale" id="depthScale"></div>
+                </div>
+            </div>
+
+            <div class="pipe-legend" id="pipeLegend"></div>
+        </div>
+    </div>
+
+    <script>
+        // Cesium Setup
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmNmNiNGMzYi00Y2U4LTQ4ZDYtYTFjOC05NjY0MDZlMzRlNTMiLCJpZCI6MzY4MDAwLCJpYXQiOjE3NjUyNzc1OTB9.7YpgEtFgQ5_Faib4dt4cr8eHM95CX-tmk_KQ1sT71Aw';
+
+        const imageryProvider = new Cesium.UrlTemplateImageryProvider({
+            url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            credit: 'Map data © OpenStreetMap contributors',
+            maximumLevel: 19
+        });
+
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+            baseLayerPicker: false,
+            skyBox: false,
+            skyAtmosphere: false,
+            animation: false,
+            timeline: false,
+            geocoder: true,
+            homeButton: true,
+            sceneModePicker: true,
+            navigationHelpButton: true,
+            infoBox: true,
+            selectionIndicator: true
+        });
+
+        viewer.scene.imageryLayers.removeAll();
+        viewer.scene.imageryLayers.addImageryProvider(imageryProvider);
+        viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#222222');
+        viewer.scene.globe.show = true;
+        viewer.scene.globe.enableLighting = false;
+
+        const startCoordinates = {
+            longitude: 4.878,
+            latitude: 52.400,
+            height: 1200,
+            heading: 0,
+            pitch: -Cesium.Math.toRadians(60)
+        };
+
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(
+                startCoordinates.longitude,
+                startCoordinates.latitude,
+                startCoordinates.height
+            ),
+            orientation: {
+                heading: Cesium.Math.toRadians(startCoordinates.heading),
+                pitch: startCoordinates.pitch,
+                roll: 0.0
+            },
+            duration: 3
+        });
+
+        // Test data for streets with pipes
+        const streetData = {
+            "Havenstraat": {
+                name: "Havenstraat",
+                pipes: [
+                    { name: "Riool", type: "Sewer", diameter: 400, depth: 100, color: "#8B4513", x: 15 },
+                    { name: "Kabel", type: "Telecom", diameter: 200, depth: 400, color: "#FF6B35", x: 35 },
+                    { name: "Water", type: "Water", diameter: 300, depth: 250, color: "#4A90E2", x: 55 },
+                    { name: "Gas", type: "Gas", diameter: 150, depth: 500, color: "#FFD700", x: 75 }
+                ]
+            },
+            "Westhavenweg": {
+                name: "Westhavenweg",
+                pipes: [
+                    { name: "Riool 18-in", type: "Sewer", diameter: 450, depth: 120, color: "#8B4513", x: 20 },
+                    { name: "Water 12-in", type: "Water", diameter: 300, depth: 300, color: "#4A90E2", x: 40 },
+                    { name: "Storm Drain 24-in", type: "Storm", diameter: 600, depth: 200, color: "#00CED1", x: 60 },
+                    { name: "Telecom", type: "Telecom", diameter: 180, depth: 450, color: "#FF6B35", x: 80 }
+                ]
+            },
+            "Noordzeeweg": {
+                name: "Noordzeeweg",
+                pipes: [
+                    { name: "Riool 1m", type: "Sewer", diameter: 500, depth: 100, color: "#8B4513", x: 25 },
+                    { name: "Kabel 400cm", type: "Telecom", diameter: 200, depth: 400, color: "#FF6B35", x: 50 },
+                    { name: "Gasleiding", type: "Gas", diameter: 250, depth: 350, color: "#FFD700", x: 75 }
+                ]
+            },
+            "Havenkade": {
+                name: "Havenkade",
+                pipes: [
+                    { name: "Hoofdriool", type: "Sewer", diameter: 600, depth: 150, color: "#8B4513", x: 30 },
+                    { name: "Waterleiding", type: "Water", diameter: 400, depth: 280, color: "#4A90E2", x: 50 },
+                    { name: "Stroomkabel", type: "Power", diameter: 300, depth: 500, color: "#FF0000", x: 70 }
+                ]
+            }
+        };
+
+        // Type colors mapping
+        const typeColors = {
+            "Sewer": "#8B4513",
+            "Water": "#4A90E2",
+            "Gas": "#FFD700",
+            "Telecom": "#FF6B35",
+            "Storm": "#00CED1",
+            "Power": "#FF0000"
+        };
+
+        // Populate street selector
+        const streetSelect = document.getElementById('streetSelect');
+        Object.keys(streetData).forEach(streetName => {
+            const option = document.createElement('option');
+            option.value = streetName;
+            option.textContent = streetName;
+            streetSelect.appendChild(option);
+        });
+
+        // Render cross-section
+        function renderCrossSection(street) {
+            const crossSectionView = document.getElementById('crossSectionView');
+            const streetView = document.getElementById('streetView');
+            const pipeLegend = document.getElementById('pipeLegend');
+            const depthScale = document.getElementById('depthScale');
+
+            // Clear previous content
+            crossSectionView.querySelectorAll('.pipe-circle, .pipe-label').forEach(el => el.remove());
+            depthScale.innerHTML = '';
+            pipeLegend.innerHTML = '';
+
+            if (!street) {
+                streetView.textContent = 'Select a street';
+                return;
+            }
+
+            // Update street view
+            streetView.textContent = street.name;
+
+            // Render depth scale (0 to 600cm)
+            for (let depth = 0; depth <= 600; depth += 100) {
+                const marker = document.createElement('div');
+                marker.className = 'depth-marker';
+                marker.style.position = 'absolute';
+                marker.style.top = `${(depth / 600) * 100}%`;
+                marker.style.width = '100%';
+                depthScale.appendChild(marker);
+
+                const label = document.createElement('div');
+                label.textContent = `${depth}cm`;
+                label.style.position = 'absolute';
+                label.style.top = `${(depth / 600) * 100}%`;
+                label.style.transform = 'translateY(-50%)';
+                depthScale.appendChild(label);
+            }
+
+            // Render pipes
+            const viewHeight = crossSectionView.offsetHeight - 20; // Account for ground surface
+            const viewWidth = crossSectionView.offsetWidth - 50; // Account for depth scale
+
+            street.pipes.forEach(pipe => {
+                // Calculate position
+                const xPercent = (pipe.x / 100) * viewWidth;
+                const depthPercent = (pipe.depth / 600); // Max depth 600cm
+                const yPos = 20 + (depthPercent * (viewHeight - 20)); // Start below ground surface
+
+                // Size based on diameter (scale: 1cm = 1px, but cap at reasonable sizes)
+                const size = Math.min(Math.max(pipe.diameter / 10, 30), 120);
+
+                // Create pipe circle
+                const circle = document.createElement('div');
+                circle.className = 'pipe-circle';
+                circle.style.left = `${xPercent}px`;
+                circle.style.top = `${yPos}px`;
+                circle.style.width = `${size}px`;
+                circle.style.height = `${size}px`;
+                circle.style.borderColor = pipe.color;
+                circle.style.backgroundColor = pipe.color + '80'; // Add transparency
+                circle.style.transform = 'translate(-50%, -50%)';
+                circle.textContent = `${pipe.diameter}mm`;
+                crossSectionView.appendChild(circle);
+
+                // Create label
+                const label = document.createElement('div');
+                label.className = 'pipe-label';
+                label.textContent = `${pipe.name} ${pipe.diameter}mm`;
+                label.style.left = `${xPercent}px`;
+                label.style.top = `${yPos + size / 2 + 5}px`;
+                label.style.transform = 'translateX(-50%)';
+                crossSectionView.appendChild(label);
+
+                // Add to legend
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                const colorBox = document.createElement('div');
+                colorBox.className = 'legend-color';
+                colorBox.style.backgroundColor = pipe.color + '80';
+                colorBox.style.borderColor = pipe.color;
+                const labelText = document.createElement('span');
+                labelText.textContent = `${pipe.name} (${pipe.type}) - ${pipe.diameter}mm @ ${pipe.depth}cm`;
+                legendItem.appendChild(colorBox);
+                legendItem.appendChild(labelText);
+                pipeLegend.appendChild(legendItem);
+            });
+        }
+
+        // Handle street selection
+        streetSelect.addEventListener('change', (e) => {
+            const selectedStreet = e.target.value;
+            if (selectedStreet && streetData[selectedStreet]) {
+                renderCrossSection(streetData[selectedStreet]);
+            } else {
+                renderCrossSection(null);
+            }
+        });
+
+        // Load first street by default
+        if (Object.keys(streetData).length > 0) {
+            const firstStreet = Object.keys(streetData)[0];
+            streetSelect.value = firstStreet;
+            renderCrossSection(streetData[firstStreet]);
+        }
+    </script>
+</body>
+
+</html>

@@ -108,6 +108,191 @@
           ]
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Waterleiding Centrum",
+        "type": "Water",
+        "depth": -4
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87600, 52.39900, -4],
+          [4.87800, 52.39950, -4],
+          [4.88000, 52.40000, -4],
+          [4.88200, 52.40050, -4]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Stroomkabel Oost",
+        "type": "Power",
+        "depth": -6
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87900, 52.39850, -6],
+          [4.88100, 52.39900, -6],
+          [4.88300, 52.39950, -6],
+          [4.88500, 52.40000, -6]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Gasleiding Parallel",
+        "type": "Gas",
+        "depth": -5
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87400, 52.40000, -5],
+          [4.87600, 52.40050, -5],
+          [4.87800, 52.40100, -5],
+          [4.88000, 52.40150, -5]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Riool Zuid",
+        "type": "Sewer",
+        "depth": -8
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87700, 52.40150, -8],
+          [4.87900, 52.40200, -8],
+          [4.88100, 52.40250, -8],
+          [4.88300, 52.40300, -8]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hoofdriool Diep",
+        "type": "Sewer",
+        "depth": -12
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87500, 52.39950, -12],
+          [4.87700, 52.40000, -12],
+          [4.87900, 52.40050, -12],
+          [4.88100, 52.40100, -12],
+          [4.88300, 52.40150, -12]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Stroomkabel Diep",
+        "type": "Power",
+        "depth": -15
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87600, 52.40050, -15],
+          [4.87800, 52.40100, -15],
+          [4.88000, 52.40150, -15]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Waterleiding Netwerk",
+        "type": "Water",
+        "depth": -3
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87800, 52.40150, -3],
+          [4.88000, 52.40180, -3],
+          [4.88200, 52.40200, -3]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Gas Distributie",
+        "type": "Gas",
+        "depth": -6
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87750, 52.39900, -6],
+          [4.87850, 52.39950, -6],
+          [4.87950, 52.40000, -6],
+          [4.88050, 52.40050, -6]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Riool Collectie",
+        "type": "Sewer",
+        "depth": -9
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87850, 52.40000, -9],
+          [4.88000, 52.40030, -9],
+          [4.88150, 52.40060, -9]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Fiber Optic Kabel",
+        "type": "Power",
+        "depth": -2
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87550, 52.40050, -2],
+          [4.87700, 52.40080, -2],
+          [4.87850, 52.40110, -2],
+          [4.88000, 52.40140, -2]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hoofdwaterleiding",
+        "type": "Water",
+        "depth": -5
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [4.87650, 52.40100, -5],
+          [4.87800, 52.40130, -5],
+          [4.87950, 52.40160, -5],
+          [4.88100, 52.40190, -5]
+        ]
+      }
     }
   ]
 }
